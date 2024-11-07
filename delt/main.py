@@ -1,35 +1,30 @@
 from datetime import timedelta
-
 import arrow
 import typer
 from typing_extensions import Annotated
 
+app = typer.Typer()
 
 def format_duration(duration: timedelta, append_ago: bool = False) -> str:
     """Format the duration into a human-readable string."""
     seconds = duration.total_seconds()
-
-    # Define time intervals in seconds
     intervals = (
-        (31536000, "year", "years"),  # 365 days
-        (2592000, "month", "months"),  # 30 days
-        (604800, "week", "weeks"),  # 7 days
-        (86400, "day", "days"),  # 1 day
-        (3600, "hour", "hours"),  # 1 hour
-        (60, "minute", "minutes"),  # 1 minute
-        (1, "second", "seconds"),  # 1 second
+        (31536000, "year", "years"),
+        (2592000, "month", "months"),
+        (604800, "week", "weeks"),
+        (86400, "day", "days"),
+        (3600, "hour", "hours"),
+        (60, "minute", "minutes"),
+        (1, "second", "seconds"),
     )
-
     parts = []
     for limit, singular, plural in intervals:
         if seconds >= limit:
-            value = int(seconds // limit)  # Use floor division for whole units
+            value = int(seconds // limit)
             parts.append(f"{value} {singular if value == 1 else plural}")
-            seconds %= limit  # Get the remainder for the next lower interval
-
+            seconds %= limit
     result = ", ".join(parts)
     return f"{result} ago" if append_ago else result
-
 
 def calculate_elapsed_time(start: str, end: str) -> str:
     """Calculate the elapsed time between two timestamps."""
@@ -38,28 +33,39 @@ def calculate_elapsed_time(start: str, end: str) -> str:
     duration = end_time - start_time
     return format_duration(duration, append_ago=False)
 
-
+@app.command()
 def main(
-    start: Annotated[
-        str, typer.Argument(help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'")
-    ],
-    end: Annotated[
-        str,
-        typer.Argument(help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
-    ] = None,
+        start: Annotated[
+            str, typer.Argument(help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'")
+        ],
+        end: Annotated[
+            str,
+            typer.Argument(help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
+        ] = None,
 ) -> None:
-    """
-    Calculate the human-readable elapsed time between two ServiceNow (YYYY-MM-DD HH:mm:ss) formatted timestamps.
-    """
-    start_time = arrow.get(start)
-    end_time = arrow.now() if end is None else arrow.get(end)
-    if end:
-        elapsed_time = calculate_elapsed_time(start, end)
-    else:
-        elapsed_time = format_duration(end_time - start_time, True)
-    end_time_str = end_time.format("YYYY-MM-DD HH:mm:ss")
-    typer.echo(f"Elapsed time from '{start}' to {end_time_str}:\n{elapsed_time}")
+    """Calculate the human-readable elapsed time between two ServiceNow (YYYY-MM-DD HH:mm:ss) formatted timestamps."""
+    try:
+        # Parse the start timestamp
+        start_time = arrow.get(start)
 
+        # Parse the end timestamp or use the current time if not provided
+        end_time = arrow.now() if end is None else arrow.get(end)
+
+        # Calculate the elapsed time
+        elapsed_time = calculate_elapsed_time(start, end_time.format("YYYY-MM-DD HH:mm:ss"))
+
+        end_time_str = end_time.format("YYYY-MM-DD HH:mm:ss")
+        typer.echo(f"Elapsed time from '{start}' to {end_time_str}:\n{elapsed_time}")
+
+    except arrow.parser.ParserError:
+        # Handle parsing errors specifically related to arrow
+        typer.echo("Error: One of the timestamps is not in the correct format. Please use 'YYYY-MM-DD HH:mm:ss' and ensure you're properly quoting the timestamps.")
+        raise typer.Exit(code=1)
+
+    except Exception as e:
+        # Handle any other exceptions that may occur
+        typer.echo(f"An unexpected error occurred: {e}")
+        raise typer.Exit(code=1)
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
