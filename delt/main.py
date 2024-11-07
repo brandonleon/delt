@@ -1,8 +1,9 @@
+import re
 from datetime import timedelta
+
 import arrow
 import typer
 from typing_extensions import Annotated
-import re
 
 app = typer.Typer()
 
@@ -59,8 +60,6 @@ def main(
             start, end = f"{start} {end}", None
 
     try:
-        # Parse the start timestamp
-        start_time = arrow.get(start)
 
         # Parse the end timestamp or use the current time if not provided
         end_time = arrow.now() if end is None else arrow.get(end)

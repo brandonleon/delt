@@ -16,3 +16,8 @@ dev = [
 
 [project.scripts]
 delt = "delt:app"
+
+[tool.ruff]
+# Enable import order checking
+lint.extend-ignore = []
+lint.select = ["I", "F"]  # 'I' for import-related checks, 'F' for formatting-related checks
