@@ -1,5 +1,4 @@
 import re
-from datetime import timedelta
 
 import arrow
 import typer
@@ -8,34 +7,50 @@ from typing_extensions import Annotated
 app = typer.Typer()
 
 
-def format_duration(duration: timedelta, append_ago: bool = False) -> str:
-    """Format the duration into a human-readable string."""
-    seconds = duration.total_seconds()
-    intervals = (
-        (31536000, "year", "years"),
-        (2592000, "month", "months"),
-        (604800, "week", "weeks"),
-        (86400, "day", "days"),
-        (3600, "hour", "hours"),
-        (60, "minute", "minutes"),
-        (1, "second", "seconds"),
-    )
-    parts = []
-    for limit, singular, plural in intervals:
-        if seconds >= limit:
-            value = int(seconds // limit)
-            parts.append(f"{value} {singular if value == 1 else plural}")
-            seconds %= limit
-    result = ", ".join(parts)
-    return f"{result} ago" if append_ago else result
+def format_duration(duration: int) -> str:
+    """
+    Given a time delta (in seconds), return a human-readable string.
+    Consider if the seconds is a negative value, the time delta is in the future.
+    format the time delta in a human-readable format using ago() or humanize() method.
+    :param duration:    The time delta to format (in seconds).
+    :return: str        A human-readable string representing the time delta.
+    """
+    # Check if the duration is +- 5 seconds
+    if -10 < duration < 10:
+        return "just now."
+
+    # Create an arrow object as a duration from now
+    present = arrow.utcnow()
+    delta = present.shift(seconds=duration)
+
+    return (f"{'in ' if duration < 0 else ''}"
+            f"{delta.humanize(only_distance=True)}"
+            f"{' ago' if duration > 0 else ''}.")
 
 
-def calculate_elapsed_time(start: str, end: str) -> str:
-    """Calculate the elapsed time between two timestamps."""
+def calculate_delta_seconds(start: str, end: str) -> str:
+    """
+    Calculate the elapsed time between two timestamps.
+
+    If the timestamp is in the past it will be a negative value.
+
+    Args:
+        start: The start timestamp.
+        end: The end timestamp (optional).
+
+    Returns:
+        A string representing the elapsed time between the two timestamps.
+    """
+
     start_time = arrow.get(start)
     end_time = arrow.get(end)
-    duration = end_time - start_time
-    return format_duration(duration, append_ago=False)
+
+    # Calculate the duration in seconds
+    duration = int(
+        (end_time - start_time).total_seconds()
+    )  # This will be positive if end_time is in the future. Negative if in the past.
+
+    return format_duration(duration)
 
 
 @app.command()
@@ -60,12 +75,11 @@ def main(
             start, end = f"{start} {end}", None
 
     try:
-
         # Parse the end timestamp or use the current time if not provided
         end_time = arrow.now() if end is None else arrow.get(end)
 
         # Calculate the elapsed time
-        elapsed_time = calculate_elapsed_time(
+        elapsed_time = calculate_delta_seconds(
             start, end_time.format("YYYY-MM-DD HH:mm:ss")
         )
 
