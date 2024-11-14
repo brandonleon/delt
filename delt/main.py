@@ -5,6 +5,8 @@ import typer
 from typing_extensions import Annotated
 from typing import Optional
 
+__VERSION__ = "0.3.0"
+
 app = typer.Typer()
 
 
@@ -65,6 +67,11 @@ def calculate_delta_seconds(start: str, end: Optional[str] = None) -> str:
 
     return format_duration(duration, from_now)
 
+def version_callback(value: bool):
+    if value:
+        typer.echo(f"delt version {__VERSION__}")
+        raise typer.Exit()
+
 
 @app.command()
 def main(
@@ -75,6 +82,9 @@ def main(
         str,
         typer.Argument(help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
     ] = None,
+    version: Optional[bool] = typer.Option(
+        None, "--version", "-v", callback=version_callback)
+
 ) -> None:
     """Calculate the human-readable elapsed time between two ServiceNow (YYYY-MM-DD HH:mm:ss) formatted timestamps."""
 
