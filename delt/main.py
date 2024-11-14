@@ -3,7 +3,6 @@ import re
 import arrow
 import typer
 from typing_extensions import Annotated
-from icecream import ic
 from typing import Optional
 
 app = typer.Typer()
@@ -27,12 +26,13 @@ def format_duration(duration: int, from_now: bool) -> str:
     delta = present.shift(seconds=duration)
 
     if not from_now:
-        ic(from_now)
         return f"{delta.humanize(only_distance=True)}."
 
-    return (f"{'in ' if duration < 0 else ''}"
-            f"{delta.humanize(only_distance=True)}"
-            f"{' ago' if duration > 0 else ''}.")
+    return (
+        f"{'in ' if duration < 0 else ''}"
+        f"{delta.humanize(only_distance=True)}"
+        f"{' ago' if duration > 0 else ''}."
+    )
 
 
 def calculate_delta_seconds(start: str, end: Optional[str] = None) -> str:
@@ -87,13 +87,12 @@ def main(
             # Assume the user forgot to quote the timestamps and concatenate them
             start, end = f"{start} {end}", None
     try:
-
         # Calculate the elapsed time
-        elapsed_time = calculate_delta_seconds(
-            start, end
-        )
+        elapsed_time = calculate_delta_seconds(start, end)
 
-        typer.echo(f"Elapsed time from '{start}' to {end if end is not None else arrow.utcnow().format('YYYY-MM-DD HH:mm:ss')}:\n{elapsed_time}")
+        typer.echo(
+            f"Elapsed time from '{start}' to {end if end is not None else arrow.utcnow().format('YYYY-MM-DD HH:mm:ss')}:\n{elapsed_time}"
+        )
 
     except arrow.parser.ParserError:
         # Handle parsing errors specifically related to arrow
