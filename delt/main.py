@@ -37,7 +37,7 @@ def format_duration(duration: int, from_now: bool) -> str:
     )
 
 
-def calculate_delta_seconds(start: str, end: Optional[str] = None) -> str:
+def calculate_delta_seconds(start: str, end: str | None = None) -> str:
     """
     Calculate the elapsed time between two timestamps.
 
@@ -67,6 +67,7 @@ def calculate_delta_seconds(start: str, end: Optional[str] = None) -> str:
 
     return format_duration(duration, from_now)
 
+
 def version_callback(value: bool):
     if value:
         typer.echo(f"delt version {__VERSION__}")
@@ -79,30 +80,29 @@ def main(
         str, typer.Argument(help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'")
     ],
     end: Annotated[
-        str,
+        str | None,
         typer.Argument(help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
     ] = None,
     version: Optional[bool] = typer.Option(
-        None, "--version", "-v", callback=version_callback)
-
+        None, "--version", "-v", callback=version_callback
+    ),
 ) -> None:
     """Calculate the human-readable elapsed time between two ServiceNow (YYYY-MM-DD HH:mm:ss) formatted timestamps."""
 
     # Check if start matches the format 'YYYY-MM-DD' and end matches the format 'HH:mm:ss'
     # Assume the user forgot to quote the timestamps and concatenate them.
-    if end is not None:
-        if re.match(r"^\d{4}-\d{2}-\d{2}$", start) and re.match(
-            r"^\d{2}:\d{2}:\d{2}$", end
-        ):
-            # Assume the user forgot to quote the timestamps and concatenate them
-            start, end = f"{start} {end}", None
+    if (
+        end is not None
+        and re.match(r"^\d{4}-\d{2}-\d{2}$", start)
+        and re.match(r"^\d{2}:\d{2}:\d{2}$", end)
+    ):
+        # Assume the user forgot to quote the timestamps and concatenate them
+        start, end = f"{start} {end}", None
     try:
         # Calculate the elapsed time
         elapsed_time = calculate_delta_seconds(start, end)
 
-        typer.echo(
-            f"Elapsed time from '{start}' to {end}:\n{elapsed_time}"
-        )
+        typer.echo(f"Elapsed time from '{start}' to {end}:\n{elapsed_time}")
 
     except arrow.parser.ParserError:
         # Handle parsing errors specifically related to arrow
