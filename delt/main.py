@@ -1,3 +1,36 @@
+"""delt - A command-line tool for calculating elapsed time between timestamps.
+
+This package provides a command-line interface for calculating the human-readable
+elapsed time between two timestamps formatted as 'YYYY-MM-DD HH:mm:ss'. It uses
+the Arrow library for date and time manipulation, allowing for easy handling of
+time zones and formatting.
+
+Features:
+-  Calculate the time difference between two timestamps.
+-  Output the elapsed time in a human-readable format, indicating whether the
+  time is in the past or the future.
+-  Handle edge cases such as timestamps within 10 seconds of the current time.
+-  Support for version display.
+
+Usage:
+    To use this tool, run the following command in your terminal:
+
+    python -m delt <start_timestamp> [<end_timestamp>]
+
+Example:
+    python -m delt "2024-11-14 15:00:00" "2024-11-14 16:00:00"
+
+    This will output the elapsed time between the two provided timestamps.
+
+Dependencies:
+-  Arrow: A library for handling dates and times.
+-  Typer: A library for building command-line interfaces.
+
+Version:
+    Current version: 0.3.1
+
+"""
+
 import re
 from typing import Optional
 
@@ -11,10 +44,11 @@ app = typer.Typer()
 
 
 def format_duration(duration: int, from_now: bool) -> str:
-    """
-    Given a time delta (in seconds), return a human-readable string.
+    """Given a time delta (in seconds), return a human-readable string.
+
     Consider if the seconds is a negative value, the time delta is in the future.
     format the time delta in a human-readable format using ago() or humanize() method.
+
     :param duration:    The time delta to format (in seconds).
     :param from_now:    If True, return a relative time delta.
     :return: str        A human-readable string representing the time delta.
@@ -38,8 +72,7 @@ def format_duration(duration: int, from_now: bool) -> str:
 
 
 def calculate_delta_seconds(start: str, end: str | None = None) -> str:
-    """
-    Calculate the elapsed time between two timestamps.
+    """Calculate the elapsed time between two timestamps.
 
     If the timestamp is in the past it will be a negative value.
 
@@ -49,6 +82,7 @@ def calculate_delta_seconds(start: str, end: str | None = None) -> str:
 
     Returns:
         A string representing the elapsed time between the two timestamps.
+
     """
     from_now = False
     if end is None:
@@ -69,6 +103,11 @@ def calculate_delta_seconds(start: str, end: str | None = None) -> str:
 
 
 def version_callback(value: bool):
+    """Print the version of the application if requested.
+
+    This callback function is triggered when the --version or -v option is
+    specified. It prints the current version of the application and exits.
+    """
     if value:
         typer.echo(f"delt version {__VERSION__}")
         raise typer.Exit()
@@ -88,7 +127,6 @@ def main(
     ),
 ) -> None:
     """Calculate the human-readable elapsed time between two ServiceNow (YYYY-MM-DD HH:mm:ss) formatted timestamps."""
-
     # Check if start matches the format 'YYYY-MM-DD' and end matches the format 'HH:mm:ss'
     # Assume the user forgot to quote the timestamps and concatenate them.
     if (
