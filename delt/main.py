@@ -1,11 +1,11 @@
 import re
+from typing import Optional
 
 import arrow
 import typer
 from typing_extensions import Annotated
-from typing import Optional
 
-__VERSION__ = "0.3.0"
+__VERSION__ = "0.3.1"
 
 app = typer.Typer()
 
@@ -24,7 +24,7 @@ def format_duration(duration: int, from_now: bool) -> str:
         return "just now."
 
     # Create an arrow object as a duration from now
-    present = arrow.utcnow()
+    present = arrow.now()
     delta = present.shift(seconds=duration)
 
     if not from_now:
@@ -53,7 +53,7 @@ def calculate_delta_seconds(start: str, end: Optional[str] = None) -> str:
     from_now = False
     if end is None:
         # If end is None, assume the end time is now
-        end = arrow.utcnow().format("YYYY-MM-DD HH:mm:ss")
+        end = arrow.now().format("YYYY-MM-DD HH:mm:ss")
         from_now = True
 
     start_time = arrow.get(start)
@@ -101,7 +101,7 @@ def main(
         elapsed_time = calculate_delta_seconds(start, end)
 
         typer.echo(
-            f"Elapsed time from '{start}' to {end if end is not None else arrow.utcnow().format('YYYY-MM-DD HH:mm:ss')}:\n{elapsed_time}"
+            f"Elapsed time from '{start}' to {end}:\n{elapsed_time}"
         )
 
     except arrow.parser.ParserError:
