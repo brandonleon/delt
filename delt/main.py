@@ -32,18 +32,17 @@ Version:
 """
 
 import re
-from typing import Optional
+from typing import Annotated
 
 import arrow
 import typer
-from typing_extensions import Annotated
 
-__VERSION__ = "0.3.1"
+__VERSION__ = "0.3.2"
 
 app = typer.Typer()
 
 
-def format_duration(duration: int, from_now: bool) -> str:
+def format_duration(duration: int, from_now: bool, now_diff=10) -> str:
     """Given a time delta (in seconds), return a human-readable string.
 
     Consider if the seconds is a negative value, the time delta is in the future.
@@ -51,10 +50,11 @@ def format_duration(duration: int, from_now: bool) -> str:
 
     :param duration:    The time delta to format (in seconds).
     :param from_now:    If True, return a relative time delta.
+    :param now_diff:    The threshold in seconds to consider as 'just now'.
     :return: str        A human-readable string representing the time delta.
     """
-    # Check if the duration is +- 5 seconds
-    if -10 < duration < 10:
+    # Check if the duration is +- now_diff seconds
+    if -now_diff < duration < now_diff:
         return "just now."
 
     # Create an arrow object as a duration from now
@@ -95,9 +95,8 @@ def calculate_delta_seconds(start: str, end: str | None = None) -> str:
 
     # Calculate the duration in seconds
     duration = int(
-        (end_time - start_time).total_seconds()
+        (end_time - start_time).total_seconds(),
     )  # This will be positive if end_time is in the future. Negative if in the past.
-    # return the formatted duration, from_now should be True if end_time is not within 10 seconds of now.
 
     return format_duration(duration, from_now)
 
@@ -113,21 +112,27 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
+# noinspection PyUnusedLocal
 @app.command()
 def main(
     start: Annotated[
-        str, typer.Argument(help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'")
+        str,
+        typer.Argument(help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
     ],
     end: Annotated[
         str | None,
         typer.Argument(help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
     ] = None,
-    version: Optional[bool] = typer.Option(
-        None, "--version", "-v", callback=version_callback
+    version: bool | None = typer.Option(
+        None,
+        "--version",
+        "-v",
+        callback=version_callback,
     ),
 ) -> None:
-    """Calculate the human-readable elapsed time between two ServiceNow (YYYY-MM-DD HH:mm:ss) formatted timestamps."""
-    # Check if start matches the format 'YYYY-MM-DD' and end matches the format 'HH:mm:ss'
+    """Calculate the human-readable elapsed time between two timestamps."""
+    # Check if start matches the format 'YYYY-MM-DD'
+    # and end matches the format 'HH:mm:ss'
     # Assume the user forgot to quote the timestamps and concatenate them.
     if (
         end is not None
@@ -145,7 +150,8 @@ def main(
     except arrow.parser.ParserError:
         # Handle parsing errors specifically related to arrow
         typer.echo(
-            "Error: One of the timestamps is not in the correct format. Please use 'YYYY-MM-DD HH:mm:ss'."
+            "Error: One of the timestamps is not in the correct format. "
+            "Please use 'YYYY-MM-DD HH:mm:ss'.",
         )
         raise typer.Exit(code=1)
 

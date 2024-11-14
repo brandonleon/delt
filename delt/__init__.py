@@ -30,7 +30,3 @@ Version:
     Current version: 0.3.1
 
 """
-
-
-# delt/__init__.py
-from .main import app as app
