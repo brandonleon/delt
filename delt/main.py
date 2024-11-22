@@ -32,8 +32,6 @@ Version:
 """
 
 import re
-from importlib.metadata import PackageNotFoundError
-from importlib.metadata import version as v
 from typing import Annotated
 
 import arrow
@@ -108,9 +106,10 @@ def version_callback(value: bool):
     specified. It prints the current version of the application and exits.
     """
     if value:
+        from importlib.metadata import PackageNotFoundError, version
+
         try:
-            version_number = v("delt")
-            typer.echo(f"delt version {version_number}")
+            typer.echo(f"delt version {version('delt')}")
         except PackageNotFoundError:
             typer.echo("Version information not found.")
         raise typer.Exit()
