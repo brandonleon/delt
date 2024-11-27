@@ -148,7 +148,9 @@ def main(
         # Calculate the elapsed time
         elapsed_time = calculate_delta_seconds(start, end)
 
-        typer.echo(f"Elapsed time from '{start}' to {end}:\n{elapsed_time}")
+        typer.echo(
+            f"Elapsed time from '{start}' to {end if end is not None else 'now'}:\n{elapsed_time}"
+        )
 
     except arrow.parser.ParserError:
         # Handle parsing errors specifically related to arrow
