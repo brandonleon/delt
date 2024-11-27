@@ -40,7 +40,7 @@ import typer
 app = typer.Typer()
 
 
-def format_duration(duration: int, from_now: bool, now_diff=10) -> str:
+def format_duration(duration: int, from_now: bool, now_diff: int = 10) -> str:
     """Given a time delta (in seconds), return a human-readable string.
 
     Consider if the seconds is a negative value, the time delta is in the future.
@@ -99,7 +99,7 @@ def calculate_delta_seconds(start: str, end: str | None = None) -> str:
     return format_duration(duration, from_now)
 
 
-def version_callback(value: bool):
+def version_callback(value: bool) -> None:
     """Print the version of the application if requested.
 
     This callback function is triggered when the --version or -v option is
@@ -112,7 +112,7 @@ def version_callback(value: bool):
             typer.echo(f"delt version {version('delt')}")
         except PackageNotFoundError:
             typer.echo("Version information not found.")
-        raise typer.Exit()
+        raise typer.Exit
 
 
 # noinspection PyUnusedLocal
@@ -154,7 +154,8 @@ def main(
             start, end = end, start
 
         typer.echo(
-            f"Elapsed time from '{'now' if start is None else start}' to '{'now' if end is None else end}':\n{elapsed_time}"
+            f"Elapsed time from '{'now' if start is None else start}' "
+            f"to '{'now' if end is None else end}':\n{elapsed_time}",
         )
 
     except arrow.parser.ParserError as e:
