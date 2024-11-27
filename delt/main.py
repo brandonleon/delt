@@ -148,22 +148,27 @@ def main(
         # Calculate the elapsed time
         elapsed_time = calculate_delta_seconds(start, end)
 
+        if (
+            end is None and arrow.get(start) > arrow.now()
+        ):  # If the start time is in the future
+            start, end = end, start
+
         typer.echo(
-            f"Elapsed time from '{start}' to {end if end is not None else 'now'}:\n{elapsed_time}"
+            f"Elapsed time from '{start if start is not None else 'now'}' to '{end if end is not None else 'now'}':\n{elapsed_time}"
         )
 
-    except arrow.parser.ParserError:
+    except arrow.parser.ParserError as e:
         # Handle parsing errors specifically related to arrow
         typer.echo(
             "Error: One of the timestamps is not in the correct format. "
             "Please use 'YYYY-MM-DD HH:mm:ss'.",
         )
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
     except Exception as e:
         # Handle any other exceptions that may occur
         typer.echo(f"An unexpected error occurred: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":
