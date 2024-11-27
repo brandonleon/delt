@@ -58,7 +58,7 @@ delt --version
 ```
 Output:
 ``` text
-delt version 0.3.3
+delt version 0.3.7
 ```
 
 ## Dependencies
