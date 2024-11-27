@@ -154,7 +154,7 @@ def main(
             start, end = end, start
 
         typer.echo(
-            f"Elapsed time from '{start if start is not None else 'now'}' to '{end if end is not None else 'now'}':\n{elapsed_time}"
+            f"Elapsed time from '{'now' if start is None else start}' to '{'now' if end is None else end}':\n{elapsed_time}"
         )
 
     except arrow.parser.ParserError as e:
