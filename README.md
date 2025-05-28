@@ -5,8 +5,8 @@
 ## Features
 
 - Calculate the time difference between two timestamps.
-- Present results in a human-readable format, indicating if the time is in the past or the future.
-- Handle edge cases (e.g., timestamps within 10 seconds of the current time).
+- Presents results in a human-readable format, indicating whether the time is in the past or future.
+- Handles edge cases (e.g., when timestamps are within 10 seconds of the current time).
 - Display the current version of the tool.
 
 ## Installation
@@ -19,11 +19,20 @@ uv tool install https://github.com/brandonleon/delt.git
 
 ## Usage
 
-Once installed, the tool is accessible via the `delt` command. Run it as follows:
+Once installed, you can access the tool using the `delt` command:
 
 ``` bash
-delt <start_timestamp> [<end_timestamp>
+delt <start_timestamp> [<end_timestamp>] [OPTIONS]
 ```
+
+### Options
+
+- `-e`, `--exact`  
+  Show the exact elapsed time as weeks, days, hours, minutes, and seconds.
+
+- `-v`, `--version`  
+  Display the current version of the tool.
+
 
 ### Examples
 
@@ -68,4 +77,5 @@ delt version 0.3.7
 
 ## License
 
-This project is licensed under the [Creative Commons Attribution License (CC BY)](https://creativecommons.org/licenses/by/4.0/). You are free to use, distribute, remix, adapt, and build upon this work, even commercially, as long as you credit the original creator.
+This project is licensed under the [Creative Commons Attribution License (CC BY)](https://creativecommons.org/licenses/by/4.0/).  
+You are free to use, distribute, remix, adapt, and build upon this work—even commercially—as long as you credit the original creator.
