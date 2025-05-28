@@ -27,7 +27,6 @@ def format_duration(
     )
 
 
-# TODO Rename this here and in `format_duration`
 def format_exact_duration_parts(duration):
     """
     Convert a duration in seconds to a human-readable string with an exact breakdown.
