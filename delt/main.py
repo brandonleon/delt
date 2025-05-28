@@ -3,6 +3,7 @@ from typing import Annotated
 
 import arrow
 import typer
+from arrow.parser import ParserError
 
 app = typer.Typer()
 
@@ -100,12 +101,15 @@ def main(
     try:
         elapsed_time = calculate_delta_seconds(start, end, exact=exact)
         if end is None and arrow.get(start) > arrow.now():
-            start, end = end, start
-        typer.echo(
-            f"Elapsed time from '{'now' if start is None else start}' "
-            f"to '{'now' if end is None else end}':\n{elapsed_time}",
-        )
-    except arrow.parser.ParserError as e:
+            # Don't assign None to start; just adjust the message below
+            typer.echo(
+                f"Elapsed time from 'now' to '{start}':\n{elapsed_time}",
+            )
+        else:
+            typer.echo(
+                f"Elapsed time from '{start}' to '{end if end is not None else 'now'}':\n{elapsed_time}",
+            )
+    except ParserError as e:
         typer.echo(
             "Error: One of the timestamps is not in the correct format. "
             "Please use 'YYYY-MM-DD HH:mm:ss'.",
