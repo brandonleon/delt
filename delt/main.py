@@ -27,7 +27,7 @@ def format_duration(
     )
 
 
-def format_exact_duration_parts(duration):
+def format_exact_duration_parts(duration: int) -> str:
     """
     Convert a duration in seconds to a human-readable string with an exact breakdown.
 
@@ -41,27 +41,22 @@ def format_exact_duration_parts(duration):
         str: A comma-separated string listing each non-zero time unit.
     """
     seconds = abs(duration)
-    years, seconds = divmod(seconds, 31536000)
-    months, seconds = divmod(seconds, 2592000)
-    weeks, seconds = divmod(seconds, 604800)
-    days, seconds = divmod(seconds, 86400)
-    hours, seconds = divmod(seconds, 3600)
-    minutes, seconds = divmod(seconds, 60)
+    units = [
+        ("year", 31536000),
+        ("month", 2592000),
+        ("week", 604800),
+        ("day", 86400),
+        ("hour", 3600),
+        ("minute", 60),
+        ("second", 1),
+    ]
     parts = []
-    if years:
-        parts.append(f"{years} year{'s' if years != 1 else ''}")
-    if months:
-        parts.append(f"{months} month{'s' if months != 1 else ''}")
-    if weeks:
-        parts.append(f"{weeks} week{'s' if weeks != 1 else ''}")
-    if days:
-        parts.append(f"{days} day{'s' if days != 1 else ''}")
-    if hours:
-        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-    if minutes:
-        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
-    if seconds or not parts:
-        parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+    for name, count in units:
+        value, seconds = divmod(seconds, count)
+        if value:
+            parts.append(f"{value} {name}{'s' if value != 1 else ''}")
+    if not parts:
+        parts.append("0 seconds")
     return ", ".join(parts)
 
 
