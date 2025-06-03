@@ -101,11 +101,13 @@ def main(
         "-e",
         help="Show the exact elapsed time in seconds.",
     ),
-    version: bool | None = typer.Option(
-        None,
+    version: bool = typer.Option(
+        False,
         "--version",
         "-v",
         callback=version_callback,
+        is_flag=True,
+        is_eager=True,
     ),
 ) -> None:
     """Calculate the human-readable elapsed time between two timestamps."""
