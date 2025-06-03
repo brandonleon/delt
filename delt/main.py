@@ -19,10 +19,10 @@ def format_duration(
     present = arrow.now()
     delta = present.shift(seconds=duration)
     if not from_now:
-        return f"{delta.humanize(only_distance=True)}."
+        return f"{delta.humanize(present, only_distance=True)}."
     return (
         f"{'in ' if duration < 0 else ''}"
-        f"{delta.humanize(only_distance=True)}"
+        f"{delta.humanize(present, only_distance=True)}"
         f"{' ago' if duration > 0 else ''}."
     )
 
