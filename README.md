@@ -76,6 +76,18 @@ delt version 0.3.7
 - **Arrow**: A powerful library for date and time manipulations.
 - **Typer**: A library for building intuitive CLI applications.
 
+## Running Tests
+
+The test suite can be run without installing the project as an editable package.
+Use `uv` to execute `pytest` via the Python module so the project directory is
+added to the import path:
+
+```bash
+uv run python -m pytest
+```
+
+This ensures the `delt` package is discoverable during collection and execution.
+
 ## License
 
 This project is licensed under the [Creative Commons Attribution License (CC BY)](https://creativecommons.org/licenses/by/4.0/).  
