@@ -1,6 +1,7 @@
 # delt
 
-**delt** is a command-line tool designed for calculating the elapsed time between two timestamps in a human-readable format. It leverages the `Arrow` library for handling date and time manipulations and `Typer` for creating a user-friendly command-line interface.
+**delt** is a command-line tool designed for calculating the elapsed time between two timestamps in a human-readable format.
+It leverages the `Arrow` library for handling date and time manipulations and `Typer` for creating a user-friendly command-line interface.
 
 ## Features
 
