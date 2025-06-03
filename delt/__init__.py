@@ -27,6 +27,6 @@ Dependencies:
 -  Typer: A library for building command-line interfaces.
 
 Version:
-    Current version: 0.3.1
+    Current version: 0.5.0
 
 """
