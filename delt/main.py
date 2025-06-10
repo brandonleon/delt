@@ -16,15 +16,29 @@ def format_duration(
         return format_exact_duration_parts(duration)
     if -now_diff < duration < now_diff:
         return "just now."
-    present = arrow.now()
-    delta = present.shift(seconds=duration)
+    seconds = abs(duration)
+    units = [
+        ("year", 31536000),
+        ("month", 2592000),
+        ("week", 604800),
+        ("day", 86400),
+        ("hour", 3600),
+        ("minute", 60),
+        ("second", 1),
+    ]
+    for name, count in units:
+        if seconds >= count:
+            value = seconds // count
+            break
+    else:
+        value, name = 0, "second"
+
+    result = f"{value} {name}{'s' if value != 1 else ''}"
     if not from_now:
-        return f"{delta.humanize(present, only_distance=True)}."
-    return (
-        f"{'in ' if duration < 0 else ''}"
-        f"{delta.humanize(present, only_distance=True)}"
-        f"{' ago' if duration > 0 else ''}."
-    )
+        return result + "."
+    if duration < 0:
+        return f"in {result}."
+    return f"{result} ago."
 
 
 def format_exact_duration_parts(duration: int) -> str:
