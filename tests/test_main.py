@@ -28,7 +28,7 @@ def test_calculate_delta_seconds_humanized_single_unit() -> None:
 def test_run_countdown(monkeypatch) -> None:
     outputs: list[str] = []
 
-    monkeypatch.setattr("delt.main.typer.echo", lambda msg: outputs.append(msg))
+    monkeypatch.setattr("delt.main.typer.echo", lambda *args, **kwargs: outputs.append(args[0]))
 
     start_time = run_countdown.__globals__["arrow"].get("2024-01-01 00:00:00")
     times = [
