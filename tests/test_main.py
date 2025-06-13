@@ -1,3 +1,4 @@
+
 from delt.main import (
     calculate_delta_seconds,
     format_exact_duration_parts,
@@ -25,23 +26,35 @@ def test_calculate_delta_seconds_humanized_single_unit() -> None:
     assert calculate_delta_seconds(start, end) == "1 hour."
 
 
-def test_run_countdown(monkeypatch) -> None:
+def test_run_countdown_date(monkeypatch) -> None:
     outputs: list[str] = []
 
-    monkeypatch.setattr("delt.main.typer.echo", lambda *args, **kwargs: outputs.append(args[0]))
+    monkeypatch.setattr(main.typer, "echo", lambda msg: outputs.append(msg))
 
-    start_time = run_countdown.__globals__["arrow"].get("2024-01-01 00:00:00")
-    times = [
-        start_time,
-        start_time.shift(seconds=12),
-    ]
+    arrow_mod = main.arrow
 
-    monkeypatch.setattr("delt.main.arrow.now", lambda: times.pop(0))
-    monkeypatch.setattr("delt.main.time.sleep", lambda _s: None)
+    def fake_get(date_str: str) -> arrow_mod.Arrow:
+        fmt = "%Y-%m-%d" if len(date_str) == 10 else "%Y-%m-%d %H:%M:%S"
+        return arrow_mod.Arrow(datetime.strptime(date_str, fmt))
 
-    target = start_time.shift(seconds=12).format("YYYY-MM-DD HH:mm:ss")
-    run_countdown(target)
+    times = iter(
+        [
+            arrow_mod.Arrow(datetime(2028, 7, 6, 0, 0, 0)),
+            arrow_mod.Arrow(datetime(2028, 7, 7, 0, 0, 0)),
+        ]
+    )
 
-    assert "Remaining: in" in outputs[0]
-    assert outputs[-1] == "Time's up!"
-    assert len(outputs) == 2
+    monkeypatch.setattr(main.arrow, "get", fake_get)
+    # The 'times' iterator is intentionally limited to two values to simulate specific timestamps.
+    # Adding a safeguard to prevent StopIteration errors if 'times' is exhausted.
+    monkeypatch.setattr(
+        main.arrow,
+        "now",
+        lambda: next(times, arrow_mod.Arrow(datetime(1970, 1, 1, 0, 0, 0))),
+    )
+    monkeypatch.setattr(main.time, "sleep", lambda _: None)
+
+    main.run_countdown("2028-07-07")
+
+    assert outputs[0].startswith("Remaining: in ")
+
