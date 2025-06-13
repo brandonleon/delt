@@ -1,4 +1,5 @@
 import re
+import time
 from typing import Annotated
 
 import arrow
@@ -88,6 +89,23 @@ def calculate_delta_seconds(
     return format_duration(duration, from_now, exact=exact)
 
 
+def run_countdown(target: str, exact: bool = False) -> None:
+    """Continuously display the time remaining until ``target``."""
+    target_time = arrow.get(target)
+    try:
+        while True:
+            remaining = int((target_time - arrow.now()).total_seconds())
+            if remaining <= 0:
+                typer.echo("Time's up!")
+                break
+            typer.echo(
+                f"Remaining: {format_duration(remaining, from_now=True, exact=exact)}"
+            )
+            time.sleep(1)
+    except KeyboardInterrupt:
+        typer.echo("\nCountdown cancelled.")
+
+
 def version_callback(value: bool) -> None:
     if value:
         from importlib.metadata import PackageNotFoundError, version
@@ -123,6 +141,12 @@ def main(
         is_flag=True,
         is_eager=True,
     ),
+    countdown: bool = typer.Option(
+        False,
+        "--countdown",
+        "-c",
+        help="Continuously display time remaining until the start timestamp.",
+    ),
 ) -> None:
     """Calculate the human-readable elapsed time between two timestamps."""
     if (
@@ -132,6 +156,9 @@ def main(
     ):
         start, end = f"{start} {end}", None
     try:
+        if countdown:
+            run_countdown(start, exact=exact)
+            return
         elapsed_time = calculate_delta_seconds(start, end, exact=exact)
         if end is None and arrow.get(start) > arrow.now():
             # Don't assign None to start; just adjust the message below

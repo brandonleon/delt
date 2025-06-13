@@ -9,6 +9,7 @@ It leverages the `Arrow` library for handling date and time manipulations and `T
 - Presents results in a human-readable format, indicating whether the time is in the past or future.
 - Handles edge cases (e.g., when timestamps are within 10 seconds of the current time).
 - Display the current version of the tool.
+- Continuously display remaining time until a future timestamp with `--countdown`.
 
 ## Installation
 
@@ -31,8 +32,10 @@ delt <start_timestamp> [<end_timestamp>] [OPTIONS]
 - `-e`, `--exact`  
   Show the exact elapsed time as weeks, days, hours, minutes, and seconds.
 
-- `-v`, `--version`  
+- `-v`, `--version`
   Display the current version of the tool.
+- `-c`, `--countdown`
+  Show a live countdown until the start timestamp.
 
 
 ### Examples
@@ -57,6 +60,12 @@ delt <start_timestamp> [<end_timestamp>] [OPTIONS]
     Output (varies based on the current time):
     ``` text
     10 minutes ago
+    ```
+
+3. Display a live countdown until a future timestamp:
+
+    ``` bash
+    delt "2024-11-14 16:00:10" --countdown
     ```
 
 ### Display the Version
