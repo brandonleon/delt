@@ -44,7 +44,13 @@ def test_run_countdown_date(monkeypatch) -> None:
     )
 
     monkeypatch.setattr(main.arrow, "get", fake_get)
-    monkeypatch.setattr(main.arrow, "now", lambda: next(times))
+    # The 'times' iterator is intentionally limited to two values to simulate specific timestamps.
+    # Adding a safeguard to prevent StopIteration errors if 'times' is exhausted.
+    monkeypatch.setattr(
+        main.arrow,
+        "now",
+        lambda: next(times, arrow_mod.Arrow(datetime(1970, 1, 1, 0, 0, 0))),
+    )
     monkeypatch.setattr(main.time, "sleep", lambda _: None)
 
     main.run_countdown("2028-07-07")
