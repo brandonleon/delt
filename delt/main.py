@@ -110,7 +110,7 @@ def run_countdown(target: str, exact: bool = False) -> None:
                 typer.echo("Time's up!")
                 break
             typer.echo(
-                f"Remaining: {format_duration(remaining, from_now=True, exact=exact)}"
+                f"Remaining: {format_duration(-remaining, from_now=True, exact=exact)}"
             )
             time.sleep(1)
     except KeyboardInterrupt:
