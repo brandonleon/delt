@@ -10,7 +10,7 @@ app = typer.Typer()
 
 
 def format_duration(
-    duration: int, from_now: bool, now_diff: int = 10, exact: bool = False
+    duration: int, from_now: bool, now_diff: int = 10, exact: bool = False, reverse: bool = False
 ) -> str:
     """Given a time delta (in seconds), return a human-readable string or exact breakdown."""
     if exact:
@@ -37,7 +37,10 @@ def format_duration(
     result = f"{value} {name}{'s' if value != 1 else ''}"
     if not from_now:
         return result + "."
-    if duration < 0:
+    if reverse:
+        duration = -duration
+
+    if duration > 0:
         return f"in {result}."
     return f"{result} ago."
 
@@ -86,16 +89,24 @@ def calculate_delta_seconds(
     start_time = arrow.get(start)
     end_time = arrow.get(end)
     duration = int((end_time - start_time).total_seconds())
+    # For "from now" comparisons, we want the direction to be from now to the target time
+    if from_now and not getattr(calculate_delta_seconds, 'in_countdown', False):
+        duration = -duration  # Reverse the duration for "from now" comparisons
     return format_duration(duration, from_now, exact=exact)
 
 
 def run_countdown(target: str, exact: bool = False) -> None:
     """Continuously display the time remaining until ``target``."""
-    target_time = arrow.get(target)
+    # Get the local timezone from the current time
+    local_tz = arrow.now().tzinfo
+    # Parse the target time and explicitly set it to local timezone
+    target_time = arrow.get(target).replace(tzinfo=local_tz)
+    calculate_delta_seconds.in_countdown = True
     try:
         while True:
-            remaining = int((target_time - arrow.now()).total_seconds())
-            if remaining <= 0:
+            now = arrow.now()
+            remaining = int((target_time - now).total_seconds())
+            if remaining < 0:
                 typer.echo("Time's up!")
                 break
             typer.echo(
@@ -104,6 +115,8 @@ def run_countdown(target: str, exact: bool = False) -> None:
             time.sleep(1)
     except KeyboardInterrupt:
         typer.echo("\nCountdown cancelled.")
+    finally:
+        calculate_delta_seconds.in_countdown = False
 
 
 def version_callback(value: bool) -> None:
