@@ -1,6 +1,6 @@
 version = 1
 revision = 2
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 
 [[package]]
 name = "arrow"
@@ -50,7 +50,7 @@ wheels = [
 
 [[package]]
 name = "delt"
-version = "0.6.0"
+version = "0.6.1"
 source = { virtual = "." }
 dependencies = [
     { name = "arrow" },
