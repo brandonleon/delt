@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Annotated
+from typing import Annotated, Callable, cast
 
 import arrow
 import typer
@@ -10,7 +10,11 @@ app = typer.Typer()
 
 
 def format_duration(
-    duration: int, from_now: bool, now_diff: int = 10, exact: bool = False, reverse: bool = False
+    duration: int,
+    from_now: bool,
+    now_diff: int = 10,
+    exact: bool = False,
+    reverse: bool = False,
 ) -> str:
     """Given a time delta (in seconds), return a human-readable string or exact breakdown."""
     if exact:
@@ -78,6 +82,11 @@ def format_exact_duration_parts(duration: int) -> str:
     return ", ".join(parts)
 
 
+# Type for the calculate_delta_seconds function with the in_countdown attribute
+class DeltaCalculator(Callable[[str, str | None, bool], str]):
+    in_countdown: bool
+
+
 def calculate_delta_seconds(
     start: str, end: str | None = None, exact: bool = False
 ) -> str:
@@ -90,7 +99,9 @@ def calculate_delta_seconds(
     end_time = arrow.get(end)
     duration = int((end_time - start_time).total_seconds())
     # For "from now" comparisons, we want the direction to be from now to the target time
-    if from_now and not getattr(calculate_delta_seconds, 'in_countdown', False):
+    # Cast the function to our custom type that includes the in_countdown attribute
+    calc_func = cast(DeltaCalculator, calculate_delta_seconds)
+    if from_now and not getattr(calc_func, "in_countdown", False):
         duration = -duration  # Reverse the duration for "from now" comparisons
     return format_duration(duration, from_now, exact=exact)
 
@@ -101,7 +112,9 @@ def run_countdown(target: str, exact: bool = False) -> None:
     local_tz = arrow.now().tzinfo
     # Parse the target time and explicitly set it to local timezone
     target_time = arrow.get(target).replace(tzinfo=local_tz)
-    calculate_delta_seconds.in_countdown = True
+    # Cast the function to our custom type that includes the in_countdown attribute
+    calc_func = cast(DeltaCalculator, calculate_delta_seconds)
+    calc_func.in_countdown = True
     try:
         while True:
             now = arrow.now()
@@ -116,7 +129,9 @@ def run_countdown(target: str, exact: bool = False) -> None:
     except KeyboardInterrupt:
         typer.echo("\nCountdown cancelled.")
     finally:
-        calculate_delta_seconds.in_countdown = False
+        # Cast the function to our custom type that includes the in_countdown attribute
+        calc_func = cast(DeltaCalculator, calculate_delta_seconds)
+        calc_func.in_countdown = False
 
 
 def version_callback(value: bool) -> None:
