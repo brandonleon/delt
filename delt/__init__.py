@@ -27,10 +27,3 @@ Dependencies:
 -  Typer: A library for building command-line interfaces.
 
 """
-
-import sys
-
-if sys.version_info >= (3, 13):
-    raise RuntimeError(
-        "delt does not currently support Python 3.13. Please use Python 3.12."
-    )
