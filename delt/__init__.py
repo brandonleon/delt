@@ -26,11 +26,11 @@ Dependencies:
 -  Arrow: A library for handling dates and times.
 -  Typer: A library for building command-line interfaces.
 
-Version:
-    Current version: 0.5.0
-
 """
+
 import sys
 
 if sys.version_info >= (3, 13):
-    raise RuntimeError("delt does not currently support Python 3.13. Please use Python 3.12.")
+    raise RuntimeError(
+        "delt does not currently support Python 3.13. Please use Python 3.12."
+    )

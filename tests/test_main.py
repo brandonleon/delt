@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from delt import main
-
 from delt.main import calculate_delta_seconds, format_exact_duration_parts
 
 
@@ -28,7 +27,10 @@ def test_calculate_delta_seconds_humanized_single_unit() -> None:
 def test_run_countdown_date(monkeypatch) -> None:
     outputs: list[str] = []
 
-    monkeypatch.setattr(main.typer, "echo", lambda msg: outputs.append(msg))
+    def mock_echo(msg, nl=True, err=False):
+        outputs.append(msg)
+
+    monkeypatch.setattr(main.typer, "echo", mock_echo)
 
     arrow_mod = main.arrow
 
@@ -38,14 +40,19 @@ def test_run_countdown_date(monkeypatch) -> None:
 
     times = iter(
         [
-            arrow_mod.Arrow(datetime(2028, 7, 6, 0, 0, 0)),
-            arrow_mod.Arrow(datetime(2028, 7, 7, 0, 0, 0)),
+            arrow_mod.Arrow(datetime(2028, 7, 6, 0, 0, 0)),  # For tzinfo check
+            arrow_mod.Arrow(datetime(2028, 7, 6, 0, 0, 0)),  # First iteration
+            arrow_mod.Arrow(
+                datetime(2028, 7, 7, 0, 0, 0)
+            ),  # Second iteration, triggers exit
         ]
     )
 
     monkeypatch.setattr(main.arrow, "get", fake_get)
-    # The 'times' iterator is intentionally limited to two values to simulate specific timestamps.
-    # Adding a safeguard to prevent StopIteration errors if 'times' is exhausted.
+    # The 'times' iterator provides three values:
+    # 1. For tzinfo check in run_countdown
+    # 2. First loop iteration showing countdown
+    # 3. Second iteration triggering exit condition
     monkeypatch.setattr(
         main.arrow,
         "now",
@@ -55,4 +62,6 @@ def test_run_countdown_date(monkeypatch) -> None:
 
     main.run_countdown("2028-07-07")
 
-    assert outputs[0].startswith("Remaining: in ")
+    # The countdown format was changed to remove redundant "in"
+    # It should now show "Remaining: X days" instead of "Remaining: in X days"
+    assert outputs[0].startswith("\rRemaining: 1 day")

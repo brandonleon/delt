@@ -1,12 +1,23 @@
 import re
 import time
-from typing import Annotated, Callable, cast
+from typing import Annotated
 
 import arrow
 import typer
 from arrow.parser import ParserError
 
 app = typer.Typer()
+
+# Time units in seconds for duration calculations
+TIME_UNITS = [
+    ("year", 31536000),
+    ("month", 2592000),
+    ("week", 604800),
+    ("day", 86400),
+    ("hour", 3600),
+    ("minute", 60),
+    ("second", 1),
+]
 
 
 def format_duration(
@@ -15,23 +26,18 @@ def format_duration(
     now_diff: int = 10,
     exact: bool = False,
     reverse: bool = False,
+    in_countdown: bool = False,
 ) -> str:
     """Given a time delta (in seconds), return a human-readable string or exact breakdown."""
     if exact:
         return format_exact_duration_parts(duration)
     if -now_diff < duration < now_diff:
-        return "just now."
+        actual_seconds = abs(duration)
+        return (
+            f"just now ({actual_seconds} second{'s' if actual_seconds != 1 else ''})."
+        )
     seconds = abs(duration)
-    units = [
-        ("year", 31536000),
-        ("month", 2592000),
-        ("week", 604800),
-        ("day", 86400),
-        ("hour", 3600),
-        ("minute", 60),
-        ("second", 1),
-    ]
-    for name, count in units:
+    for name, count in TIME_UNITS:
         if seconds >= count:
             value = seconds // count
             break
@@ -43,6 +49,10 @@ def format_duration(
         return result + "."
     if reverse:
         duration = -duration
+
+    # For countdown mode, return just the time without "in" prefix
+    if in_countdown:
+        return result
 
     if duration > 0:
         return f"in {result}."
@@ -63,17 +73,8 @@ def format_exact_duration_parts(duration: int) -> str:
         str: A comma-separated string listing each non-zero time unit.
     """
     seconds = abs(duration)
-    units = [
-        ("year", 31536000),
-        ("month", 2592000),
-        ("week", 604800),
-        ("day", 86400),
-        ("hour", 3600),
-        ("minute", 60),
-        ("second", 1),
-    ]
     parts = []
-    for name, count in units:
+    for name, count in TIME_UNITS:
         value, seconds = divmod(seconds, count)
         if value:
             parts.append(f"{value} {name}{'s' if value != 1 else ''}")
@@ -82,13 +83,8 @@ def format_exact_duration_parts(duration: int) -> str:
     return ", ".join(parts)
 
 
-# Type for the calculate_delta_seconds function with the in_countdown attribute
-class DeltaCalculator(Callable[[str, str | None, bool], str]):
-    in_countdown: bool
-
-
 def calculate_delta_seconds(
-    start: str, end: str | None = None, exact: bool = False
+    start: str, end: str | None = None, exact: bool = False, in_countdown: bool = False
 ) -> str:
     """Calculate the elapsed time between two timestamps."""
     from_now = False
@@ -99,39 +95,40 @@ def calculate_delta_seconds(
     end_time = arrow.get(end)
     duration = int((end_time - start_time).total_seconds())
     # For "from now" comparisons, we want the direction to be from now to the target time
-    # Cast the function to our custom type that includes the in_countdown attribute
-    calc_func = cast(DeltaCalculator, calculate_delta_seconds)
-    if from_now and not getattr(calc_func, "in_countdown", False):
+    if from_now and not in_countdown:
         duration = -duration  # Reverse the duration for "from now" comparisons
-    return format_duration(duration, from_now, exact=exact)
+    return format_duration(duration, from_now, exact=exact, in_countdown=in_countdown)
 
 
 def run_countdown(target: str, exact: bool = False) -> None:
     """Continuously display the time remaining until ``target``."""
-    # Get the local timezone from the current time
-    local_tz = arrow.now().tzinfo
-    # Parse the target time and explicitly set it to local timezone
-    target_time = arrow.get(target).replace(tzinfo=local_tz)
-    # Cast the function to our custom type that includes the in_countdown attribute
-    calc_func = cast(DeltaCalculator, calculate_delta_seconds)
-    calc_func.in_countdown = True
+    # Parse the target time and try to set it to local timezone
+    target_time = arrow.get(target)
+    try:
+        # Get the local timezone from a reference time and apply it to target
+        local_tz = arrow.now().tzinfo
+        target_time = target_time.replace(tzinfo=local_tz)
+    except AttributeError:
+        # Fallback for testing or when tzinfo is not available
+        pass
     try:
         while True:
             now = arrow.now()
             remaining = int((target_time - now).total_seconds())
-            if remaining < 0:
-                typer.echo("Time's up!")
+            if remaining <= 0:
+                # Clear the line and show completion message
+                typer.echo("\rTime's up!           ")
                 break
-            typer.echo(
-                f"Remaining: {format_duration(-remaining, from_now=True, exact=exact)}"
+            duration_str = format_duration(
+                -remaining, from_now=True, exact=exact, in_countdown=True
             )
+            # Use carriage return to overwrite the same line
+            typer.echo(f"\rRemaining: {duration_str}    ", nl=False)
             time.sleep(1)
     except KeyboardInterrupt:
-        typer.echo("\nCountdown cancelled.")
-    finally:
-        # Cast the function to our custom type that includes the in_countdown attribute
-        calc_func = cast(DeltaCalculator, calculate_delta_seconds)
-        calc_func.in_countdown = False
+        # Clear the line before showing cancellation message
+        typer.echo("\r" + " " * 50 + "\r", nl=False)
+        typer.echo("Countdown cancelled.")
 
 
 def version_callback(value: bool) -> None:
@@ -149,17 +146,21 @@ def version_callback(value: bool) -> None:
 def main(
     start: Annotated[
         str,
-        typer.Argument(help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
+        typer.Argument(
+            help="First timestamp, formatted as 'YYYY-MM-DD HH:mm:ss' (or split as 'YYYY-MM-DD' 'HH:mm:ss')"
+        ),
     ],
     end: Annotated[
         str | None,
-        typer.Argument(help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss'"),
+        typer.Argument(
+            help="Second timestamp, formatted as 'YYYY-MM-DD HH:mm:ss' (omit to compare with 'now')"
+        ),
     ] = None,
     exact: bool = typer.Option(
         False,
         "--exact",
         "-e",
-        help="Show the exact elapsed time in seconds.",
+        help="Show exact time breakdown (years, months, weeks, days, hours, minutes, seconds).",
     ),
     version: bool = typer.Option(
         False,
@@ -187,15 +188,29 @@ def main(
         if countdown:
             run_countdown(start, exact=exact)
             return
-        elapsed_time = calculate_delta_seconds(start, end, exact=exact)
-        if end is None and arrow.get(start) > arrow.now():
-            # Don't assign None to start; just adjust the message below
+
+        # Validate timestamps and provide helpful message if reversed
+        start_time = arrow.get(start)
+        end_time = arrow.get(end) if end is not None else arrow.now()
+
+        if end is not None and start_time > end_time:
             typer.echo(
-                f"Elapsed time from 'now' to '{start}':\n{elapsed_time}",
+                "Note: Start time is after end time. Showing absolute time difference.\n",
+                err=False,
+            )
+
+        elapsed_time = calculate_delta_seconds(start, end, exact=exact)
+        if end is None and start_time > arrow.now():
+            typer.echo(
+                f"Time until '{start}':\n{elapsed_time}",
+            )
+        elif end is None and start_time < arrow.now():
+            typer.echo(
+                f"Time since '{start}':\n{elapsed_time}",
             )
         else:
             typer.echo(
-                f"Elapsed time from '{start}' to '{end if end is not None else 'now'}':\n{elapsed_time}",
+                f"Time difference from '{start}' to '{end if end is not None else 'now'}':\n{elapsed_time}",
             )
     except ParserError as e:
         typer.echo(

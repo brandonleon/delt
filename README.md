@@ -40,7 +40,7 @@ delt <start_timestamp> [<end_timestamp>] [OPTIONS]
 
 ### Examples
 
-1. Calculate the elapsed time between two timestamps:
+1. **Calculate time difference between two timestamps:**
 
     ``` bash
     delt "2024-11-14 15:00:00" "2024-11-14 16:00:00"
@@ -48,25 +48,110 @@ delt <start_timestamp> [<end_timestamp>] [OPTIONS]
 
     Output:
     ``` text
-    1 hour
+    Time difference from '2024-11-14 15:00:00' to '2024-11-14 16:00:00':
+    1 hour.
     ```
 
-2. Calculate the elapsed time from a given timestamp to the current time:
+2. **Calculate time since a past timestamp (from 'now'):**
 
     ``` bash
     delt "2024-11-14 15:00:00"
     ```
 
-    Output (varies based on the current time):
+    Output (varies based on current time):
     ``` text
-    10 minutes ago
+    Time since '2024-11-14 15:00:00':
+    10 minutes ago.
     ```
 
-3. Display a live countdown until a future timestamp:
+3. **Calculate time until a future timestamp:**
 
     ``` bash
-    delt "2024-11-14 16:00:10" --countdown
+    delt "2025-12-31 23:59:59"
     ```
+
+    Output (varies based on current time):
+    ``` text
+    Time until '2025-12-31 23:59:59':
+    in 1 year.
+    ```
+
+4. **Show exact breakdown with all time units:**
+
+    ``` bash
+    delt "2024-01-01 00:00:00" "2024-01-02 03:45:30" --exact
+    ```
+
+    Output:
+    ``` text
+    Time difference from '2024-01-01 00:00:00' to '2024-01-02 03:45:30':
+    1 day, 3 hours, 45 minutes, 30 seconds
+    ```
+
+5. **Display live countdown until a future timestamp:**
+
+    ``` bash
+    delt "2024-12-25 09:00:00" --countdown
+    ```
+
+    Output (updates every second):
+    ``` text
+    Remaining: 5 days
+    ```
+
+6. **Use split date and time format (alternative syntax):**
+
+    ``` bash
+    delt 2024-11-14 15:00:00
+    ```
+
+    This automatically combines the date and time parts.
+
+7. **Compare timestamps within 10 seconds:**
+
+    ``` bash
+    delt "2024-11-14 15:00:00" "2024-11-14 15:00:03"
+    ```
+
+    Output:
+    ``` text
+    Time difference from '2024-11-14 15:00:00' to '2024-11-14 15:00:03':
+    just now (3 seconds).
+    ```
+
+8. **Handle reversed timestamps:**
+
+    ``` bash
+    delt "2024-12-01 12:00:00" "2024-01-01 12:00:00"
+    ```
+
+    Output:
+    ``` text
+    Note: Start time is after end time. Showing absolute time difference.
+
+    Time difference from '2024-12-01 12:00:00' to '2024-01-01 12:00:00':
+    11 months.
+    ```
+
+### Additional Features & Tips
+
+#### Timezone Handling
+- Timestamps are parsed in local timezone by default
+- Countdown mode explicitly uses local timezone to prevent mismatches
+- The tool relies on the Arrow library's timezone handling
+
+#### Edge Cases
+- **"Just now" threshold**: Timestamps within 10 seconds show as "just now" with the exact second count
+- **Future vs Past**: The tool automatically detects if a timestamp is in the future or past
+- **Reversed order**: If start time is after end time, a helpful note is displayed
+
+#### Flexible Input Format
+While the primary format is `'YYYY-MM-DD HH:mm:ss'`, you can:
+- Split date and time as separate arguments: `delt 2024-11-14 15:00:00`
+- Arrow library may support additional formats (experiment with your use case)
+
+#### Keyboard Shortcuts
+- **Ctrl+C** in countdown mode: Gracefully cancels the countdown
 
 ### Display the Version
 
@@ -75,9 +160,10 @@ To see the version of `delt`, run:
 ``` bash
 delt --version
 ```
-Output:
+
+Example output:
 ``` text
-delt version 0.3.7
+delt version 0.6.2
 ```
 
 ## Dependencies
